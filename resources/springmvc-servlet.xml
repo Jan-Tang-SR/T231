@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-3.2.xsd
+	">
+	<!-- 用于加载网页资源的类 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<!-- prefix用于指定网页的位置 -->
+		<property name="prefix" value="/"></property>
+		<!-- suffix用于指定网页的后缀 -->
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+	
+	<!-- 扫描指定的包，生成类的实例
+	由于ApplicationContext不能扫描Controller，因此建议在springmvc-servlet.xml中扫描
+	为了方便管理 很多项目中通常在ApplicationContext中扫描service、dao、工具组件
+	在springmvc-servlet.xml中扫描controller
+	 -->
+	<context:component-scan base-package="cn.smbms"></context:component-scan>
+	
+	<!-- 声明自定义的转换服务 用于处理request请求中的数据
+	注意：该转换服务最好不要命名为conversionService
+	有可能与SpringMVC自带的conversionService服务重名引发冲突
+	并且有可能与mvc:resources 冲突
+	 -->
+	 <bean id="myDateConversionService" class="org.springframework.context.support.ConversionServiceFactoryBean">
+	     <property name="converters">
+	        <list>
+	        	<ref bean="dataConverter"/>
+	        </list>
+	     </property>
+	</bean> 
+	<!-- 用于解析方法注解@RequestMapping -->
+	<mvc:annotation-driven conversion-service="myDateConversionService" >
+	    <mvc:message-converters><!-- 用于处理响应数据 -->
+	   
+	    	<bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+	    		 <property name="supportedMediaTypes">
+	    	      <list>
+	    	          <value>application/json;charset=UTF-8</value>
+	    	          <value>text/html;charset=UTF-8</value>
+	    	      </list>
+	    	   </property>
+	    	   <property name="features" value="WriteDateUseDateFormat"></property>
+	    	</bean>
+	    </mvc:message-converters>
+	</mvc:annotation-driven>
+	<!--mvc:resources 用于设置将文件夹和url做对应
+	location 用于设置文件夹在项目的哪个位置
+	mapping用于设置对应的访问url  
+	http://localhost:8080/SMBMS2/calendar/calendar.js
+	http://localhost:8080/SMBMS2/calendar/calendar.css
+	http://localhost:8080/SMBMS2/css/public.css
+	http://localhost:8080/SMBMS2/css/style.css
+	-->
+	<mvc:resources location="/calendar/" mapping="calendar/**"/>
+	<mvc:resources location="/css/" mapping="css/**"/>
+	<mvc:resources location="/images/" mapping="images/**"/>
+	<mvc:resources location="/js/" mapping="js/**"/>
+	<mvc:resources location="/idpics/" mapping="idpics/**"/>
+	<!-- <mvc:default-servlet-handler /> -->
+	<!-- <bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+		  <props>
+		     <prop key="java.lang.Exception">error</prop>
+		  </props>
+		</property>
+	</bean> -->
+	
+	 <!-- 声明上传文件解析器 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+	  <!-- 限制文件上传大小 -->
+	  <property name="maxUploadSize" value="5242880"></property>
+	  <!-- 处理文件名编码 -->
+	  <property name="defaultEncoding" value="UTF-8"></property>
+	</bean>
+	<!-- 配置拦截器 
+	效果与过滤器相似 -->
+	<mvc:interceptors>
+	  <mvc:interceptor >
+	   <mvc:mapping path="/jsp/**"/>
+	   <bean class="cn.smbms.interceptor.SessionInterceptor"></bean>
+	 </mvc:interceptor>
+	</mvc:interceptors>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+</beans>

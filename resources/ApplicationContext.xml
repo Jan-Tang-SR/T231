@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context-3.2.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+	">
+	<!-- 读取数据库配置文件database.properties 
+	如果database.properties表示用户名的key为username则有可能读取不到
+	最好改为其它的名字。
+	-->
+   <context:property-placeholder location="classpath:database.properties"/> 
+  
+    <!-- 创建数据源 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+       <property name="driverClassName" value="${driver}"></property>
+      <property name="url" value="${url}"></property>
+      <property name="username" value="${user}"></property>
+      <property name="password" value="${password}"></property>
+      <!-- 初始化连接数 -->
+      <property name="initialSize" value="100"></property>
+      <!-- 最大激活数量 与初始化连接数相同 -->
+      <property name="maxActive" value="100"></property>
+      <!-- 最大空闲连接数量 -->
+      <property name="maxIdle" value="30"></property>
+      <!-- 最小空闲数量 -->
+      <property name="minIdle" value="10"></property>
+      <!-- 最长等待时间 -->
+      <property name="maxWait" value="15000"></property>
+      <!-- 是否移除无效连接 -->
+      <property name="removeAbandoned" value="true"></property>
+      <!-- 多久移除一次 -->
+      <property name="removeAbandonedTimeout" value="5000"></property>
+      <!-- 是否在连接空闲时测试 -->
+      <property name="testWhileIdle" value="true"></property>
+      <!-- 是否在浏览连接时测试 -->
+      <property name="testOnBorrow" value="true"></property>
+      <!-- 是否在连接返回连接池时测试 -->
+      <property name="testOnReturn" value="true"></property>
+      <!-- 测试语句 -->
+      <property name="validationQuery" value="select 1"></property>
+      <!-- 测试时间间隔 -->
+      <property name="timeBetweenEvictionRunsMillis" value="60000"></property>
+      <!-- 每次测试多少个连接 -->
+      <property name="numTestsPerEvictionRun" value="100"></property>
+    </bean>
+    <!-- SqlSessionFactryBean -->
+    <bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+       <property name="dataSource" ref="dataSource"></property>
+       <property name="configLocation" value="classpath:config.xml"></property>
+     
+    </bean>
+  
+    
+    
+    <!-- 由于MapperFactoryBean配置工作量太大，因此
+    使用MapperScannerConfigurer来进行简化配置，扫描dao层的bao
+    自动生成实现类自动创建实例自动注册mapper文件 -->
+     <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+      <property name="basePackage" value="cn.smbms.dao"></property>
+    </bean> 
+    <!-- 组件自动扫描  在SSM整合过程中，如果希望使用组件扫描整个项目
+    注意：ApplicationContext中的组件扫描不包括@Controller
+    有可能导致Controller对象无法创建
+    建议：在springmvc-servlet.xml中实现扫描 -->
+    <!-- 
+    <context:component-scan base-package="cn.smbms"></context:component-scan>
+     -->
+   <!-- 声明spring的事务管理器 -->
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+      <property name="dataSource" ref="dataSource"></property>
+    </bean>
+    <!-- 开始注解事务支持 （在service实现类的方法上使用@Transactional注解进行标记）-->
+   <tx:annotation-driven transaction-manager="txManager"/>
+   
+   
+   
+   
+   
+   
+</beans>
+
+
+
+
+
